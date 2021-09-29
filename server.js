@@ -1,15 +1,17 @@
 'use strict';
 
-require('dotenv').config();
 const express = require('express');
-const app = express();
-const mongoose = require('mongoose');
+require('dotenv').config();
 const cors = require('cors');
-app.use(cors());
-const seed = require('./seed');
 
 const PORT = process.env.PORT || 3001;
+const app = express();
+app.use(cors());
+app.use(express.json());
 
+// Mongoose
+const mongoose = require('mongoose');
+mongoose.connect(process.env.MONGO_URI);
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
@@ -17,12 +19,17 @@ db.once('open', function () {
 });
 
 const BookModel = require('./models/BookSchema.js');
+const Book = require('./models/BookSchema.js');
 
-mongoose.connect('mongodb://localhost:27017/books');
+const seed = require('./seed');
 // seed();
+
+// what is this?
+const { request, response } = require('express');
 
 app.get('/books', async (request, response) => {
   const filterQuery = {};
+  // change location to email?
   if (request.query.location) {
     filterQuery.location = request.query.location;
   }
@@ -31,38 +38,44 @@ app.get('/books', async (request, response) => {
   response.send(books);
 });
 
+app.post('/books', async (request, response) => {
+  const newBook = await Book.create({
+    ...request.body,
+    email: request.query.email,
+  });
+  response.send(newBook);
+});
+
+app.delete('/books/:id', async (request, response) => {
+  // if email sent on query, then...
+  if (request.query.email) {
+    // get the book that matches id AND email
+    const foundBook = await Book.findOne({
+      _id: request.params.id,
+      email: request.query.email,
+    });
+
+    // only delete if found
+    console.log({ foundBook });
+
+    // const deleteResult = await Book.findByIdAndDelete(request.params.id);
+
+    if (foundBook) {
+      const deleteResult = await Book.findByIdAndDelete(request.params.id);
+      console.log({ deleteResult });
+      response.status(204).send('success');
+    } else {
+      response.status(400).send('You cannot delete that book'); // correct status code??
+    }
+  } else {
+    response.status(403).send('You must be logged in');
+  }
+});
+
+app.put('/books/:id', async (request, response) => {
+  const id = request.params.id;
+  let updatedBook = await Book.findByIdAndUpdate(id, { ...request.body });
+  response.status(204).send(updatedBook);
+});
+
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
-
-// app.get('/test', (request, response) => {
-//   response.send('test request received');
-// });
-
-// const BookModel = mongoose.model('book-collection', bookSchema);
-
-// const book1 = new BookModel(
-//   'Being and Nothingness',
-//   'An Essay on Phenomenological Ontology',
-//   'read',
-//   'bookreader1@gmail.com'
-// );
-
-// const book2 = new BookModel(
-//   'Ham on Rye',
-//   'Auto-biography',
-//   'unread',
-//   'charles@gmail.com'
-// );
-
-// const book3 = new BookModel(
-//   'Blink',
-//   ' It presents in popular science format research from psychology and behavioral economics on the adaptive unconscious: mental processes that work rapidly and automatically from relatively little information.',
-//   'read',
-//   'bookworm@gmail.com'
-// );
-
-// const book4 = new BookModel(
-//   'Daring Greatly',
-//   'How the Courage to Be Vulnerable Transforms the Way We Live, Love, Parent, and Lead',
-//   'unread',
-//   'nerdygirl@yahoo.com'
-// );
