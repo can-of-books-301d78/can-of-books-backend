@@ -9,7 +9,10 @@ const bookSchema = new mongoose.Schema({
   email: { type: String },
 });
 
-module.exports = {
-  Book: mongoose.model('Book', bookSchema),
-  bookSchema,
-};
+const Book = mongoose.model('Book', bookSchema);
+module.exports = Book;
+
+// module.exports = {
+//   Book: mongoose.model('Book', bookSchema),
+//   bookSchema,
+// };

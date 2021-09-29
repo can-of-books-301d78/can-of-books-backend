@@ -2,14 +2,13 @@
 
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-
 const app = express();
+const mongoose = require('mongoose');
+const cors = require('cors');
 app.use(cors());
+const seed = require('./seed');
 
 const PORT = process.env.PORT || 3001;
-
-const mongoose = require('mongoose');
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -20,6 +19,7 @@ db.once('open', function () {
 const BookModel = require('./models/BookSchema.js');
 
 mongoose.connect('mongodb://localhost:27017/books');
+// seed();
 
 app.get('/books', async (request, response) => {
   const filterQuery = {};
@@ -33,13 +33,9 @@ app.get('/books', async (request, response) => {
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
 
-
-
-
 // app.get('/test', (request, response) => {
 //   response.send('test request received');
 // });
-
 
 // const BookModel = mongoose.model('book-collection', bookSchema);
 
