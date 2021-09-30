@@ -22,7 +22,7 @@ db.once('open', function () {
 const Book = require('./models/BookSchema.js');
 
 const seed = require('./seed');
-// seed();
+seed();
 
 // what is this?
 // const { request, response } = require('express');
@@ -33,38 +33,42 @@ app.post('/book', createBook);
 app.delete('/books/:id', deleteBook);
 app.put('/books/:id', updateBook);
 
-
- async function getBooks(request, response)  {
+// GET
+async function getBooks(request, response) {
   try {
-    const books = await Book.find({email: request.query.email});
+    // console.log('I made it', request.query);
+    const books = await Book.find({
+      email: request.query.email,
+      title: request.query.title,
+      description: request.query.description,
+      status: request.query.status,
+    });
     response.send(books);
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
     response.status(400).send('Could not find books');
   }
-};
+}
 
-
-
-async function createBook(request, response)  {
+// POST
+async function createBook(request, response) {
   try {
+    console.log('I am here', request.body);
     const book = await Book.create(request.body);
-    response.send(book)
+    response.send(book);
+  } catch (error) {
+    console.error(error);
+    response.status(400).send('Unable to create book');
   }
+}
 
-  catch (error) {
-  console.error(error);
-  response.status(400).send('Unable to create book');
-  }
-};
-
+// DELETE
 async function deleteBook(request, response) {
   try {
     const email = request.query.email;
     const id = request.params.id;
-    const book = await Book.findOne({_id: id,email});
-    if (!book){
+    const book = await Book.findOne({ _id: id, email });
+    if (!book) {
       response.status(400).send('Unable to delete book');
       return;
     }
@@ -74,30 +78,30 @@ async function deleteBook(request, response) {
     }
     await Book.findByIdAndDelete(id);
     response.send('Success!');
-  }
-
-  catch (error) {
+  } catch (error) {
     console.error(error);
     response.status(400).send('Unable to delete book');
   }
 }
 
-async function updateBook (request, response)  {
+// PUT
+async function updateBook(request, response) {
   const id = request.params.id;
   const email = request.query.email;
   try {
-    const bookToUpdate = await Book.findOne({_id: id, email});
+    const bookToUpdate = await Book.findOne({ _id: id, email });
     if (!bookToUpdate) {
       response.status(400).send('Unable to update book');
-      return
+      return;
     }
-    const updatedBook = await Book.findByIdAndUpdate(id, request.body, {new: true});
+    const updatedBook = await Book.findByIdAndUpdate(id, request.body, {
+      new: true,
+    });
     response.send(updateBook);
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
     response.status(400).send('Unable to update book');
   }
-};
+}
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
