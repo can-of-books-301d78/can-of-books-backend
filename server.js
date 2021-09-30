@@ -29,7 +29,7 @@ seed();
 
 // routes
 app.get('/books', getBooks);
-app.post('/book', createBook);
+app.post('/books', createBook);
 app.delete('/books/:id', deleteBook);
 app.put('/books/:id', updateBook);
 
@@ -37,18 +37,18 @@ app.put('/books/:id', updateBook);
 async function getBooks(request, response) {
   try {
     // console.log('I made it', request.query);
-    const books = await Book.find({
-      email: request.query.email,
-      title: request.query.title,
-      description: request.query.description,
-      status: request.query.status,
-    });
+    const books = await Book.find({});
     response.send(books);
   } catch (error) {
     console.error(error);
     response.status(400).send('Could not find books');
   }
 }
+
+// email: request.query.email
+// title: request.query.title,
+// description: request.query.description,
+// status: request.query.status,
 
 // POST
 async function createBook(request, response) {
