@@ -18,14 +18,20 @@ db.once('open', function () {
   console.log('Mongoose is connected');
 });
 
-const BookModel = require('./models/BookSchema.js');
+// const BookModel = require('./models/BookSchema.js');
 const Book = require('./models/BookSchema.js');
 
 const seed = require('./seed');
 // seed();
 
 // what is this?
-const { request, response } = require('express');
+// const { request, response } = require('express');
+
+// routes
+app.get('/books', getBooks);
+app.post('/book', createBook);
+app.delete('/books/:id', deleteBook);
+app.put('/books/:id', updateBook);
 
 app.get('/books', async (request, response) => {
   const filterQuery = {};
@@ -33,7 +39,8 @@ app.get('/books', async (request, response) => {
   if (request.query.location) {
     filterQuery.location = request.query.location;
   }
-  const books = await BookModel.find(filterQuery);
+  // const books = await BookModel.find(filterQuery);
+  const books = await Book.find(filterQuery);
 
   response.send(books);
 });
