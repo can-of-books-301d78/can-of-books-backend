@@ -33,56 +33,71 @@ app.post('/book', createBook);
 app.delete('/books/:id', deleteBook);
 app.put('/books/:id', updateBook);
 
-app.get('/books', async (request, response) => {
-  const filterQuery = {};
-  // change location to email?
-  if (request.query.location) {
-    filterQuery.location = request.query.location;
+
+ async function getBooks(request, response)  {
+  try {
+    const books = await Book.find({email: request.query.email});
+    response.send(books);
   }
-  // const books = await BookModel.find(filterQuery);
-  const books = await Book.find(filterQuery);
+  catch (error) {
+    console.error(error);
+    response.status(400).send('Could not find books');
+  }
+};
 
-  response.send(books);
-});
 
-app.post('/books', async (request, response) => {
-  const newBook = await Book.create({
-    ...request.body,
-    email: request.query.email,
-  });
-  response.send(newBook);
-});
 
-app.delete('/books/:id', async (request, response) => {
-  // if email sent on query, then...
-  if (request.query.email) {
-    // get the book that matches id AND email
-    const foundBook = await Book.findOne({
-      _id: request.params.id,
-      email: request.query.email,
-    });
+async function createBook(request, response)  {
+  try {
+    const book = await Book.create(request.body);
+    response.send(book)
+  }
 
-    // only delete if found
-    console.log({ foundBook });
+  catch (error) {
+  console.error(error);
+  response.status(400).send('Unable to create book');
+  }
+};
 
-    // const deleteResult = await Book.findByIdAndDelete(request.params.id);
-
-    if (foundBook) {
-      const deleteResult = await Book.findByIdAndDelete(request.params.id);
-      console.log({ deleteResult });
-      response.status(204).send('success');
-    } else {
-      response.status(400).send('You cannot delete that book'); // correct status code??
+async function deleteBook(request, response) {
+  try {
+    const email = request.query.email;
+    const id = request.params.id;
+    const book = await Book.findOne({_id: id,email});
+    if (!book){
+      response.status(400).send('Unable to delete book');
+      return;
     }
-  } else {
-    response.status(403).send('You must be logged in');
+    if (book.email !== email) {
+      response.status(400).send('Unable to delete book');
+      return;
+    }
+    await Book.findByIdAndDelete(id);
+    response.send('Success!');
   }
-});
 
-app.put('/books/:id', async (request, response) => {
+  catch (error) {
+    console.error(error);
+    response.status(400).send('Unable to delete book');
+  }
+}
+
+async function updateBook (request, response)  {
   const id = request.params.id;
-  let updatedBook = await Book.findByIdAndUpdate(id, { ...request.body });
-  response.status(204).send(updatedBook);
-});
+  const email = request.query.email;
+  try {
+    const bookToUpdate = await Book.findOne({_id: id, email});
+    if (!bookToUpdate) {
+      response.status(400).send('Unable to update book');
+      return
+    }
+    const updatedBook = await Book.findByIdAndUpdate(id, request.body, {new: true});
+    response.send(updateBook);
+  }
+  catch (error) {
+    console.error(error);
+    response.status(400).send('Unable to update book');
+  }
+};
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
