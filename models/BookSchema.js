@@ -7,6 +7,6 @@ const bookSchema = new mongoose.Schema({
   email: { type: String },
 });
 
-const Book = mongoose.model('Book', bookSchema);
+const Book = mongoose.model('book', bookSchema);
 
 module.exports = Book;
